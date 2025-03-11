@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Web QASM viewer</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html, body {
+          height: 100%;
+          margin: 0;
+          display: flex;
+          overflow: hidden;
+      }
+
+      #container {
+          display: flex;
+          width: 100vw;
+          height: 100vh;
+      }
+
+      textarea {
+          width: 25%;
+          height: 100%;
+          border: none;
+          padding: 10px;
+          resize: none;
+          font-size: 16px;
+          box-sizing: border-box;
+      }
+
+      #circuit {
+          width: 75%;
+          height: 100%;
+          overflow: auto;
+          padding: 10px;
+          border-left: 2px solid #ccc;
+          box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <textarea id="code">
+OPENQASM 2.0;
+include "qelib1.inc";
+qreg q1[8];
+creg c0[1];
+rz(5*pi/4) q1[0];
+rx(3*pi/4) q1[0];
+      </textarea>
+      <div id="circuit">
+      </div>
+    </div>
+    <script src="https://unpkg.com/@microsoft/quantum-viz.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "antlr4": "https://unpkg.com/antlr4@4.13.2/dist/antlr4.web.mjs",
+                "qasm3Lexer": "https://qat-inria.github.io/openqasm-parser/openqasm-javascript-parser-v3.1.0/qasm3Lexer.js",
+                "qasm3Parser": "https://qat-inria.github.io/openqasm-parser/openqasm-javascript-parser-v3.1.0/qasm3Parser.js"
+                "qasmViewer": "./qasmViewer.js"
+            }
+        }
+    </script>
+    <script type="module">
+      import drawQASMCircuit from "qasmViewer";
+      const code = document.getElementById("code");
+      const circuitDiv = document.getElementById("circuit");
+      function refreshCircuit() {
+          const input = document.getElementById("code").value;
+          drawQASMCircuit(input, circuitDiv);
+      }
+      code.addEventListener("input", refreshCircuit);
+      window.onload = refreshCircuit;
+    </script>
+  </body>
+</html>

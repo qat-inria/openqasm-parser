@@ -1,5 +1,5 @@
 name: Build
-on: [workflow_dispatch]
+on: [push, workflow_dispatch]
 
 permissions:
   contents: read
@@ -8,53 +8,65 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  OPENQASM_VERSION: v3.1.0
+  ANTLR4_VERSION: 4.13.2
+
 jobs:
   build:
     name: "Build parsers"
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write      # to make release
-
     steps:
-      - name: Install antlr4
-        run: sudo apt-get install antlr4
+      - uses: actions/checkout@v4
+
+      - name: Install antlr4-tools
+        run: pip install antlr4-tools
 
       - name: Download latest OpenQASM specification
-        run: wget https://github.com/openqasm/openqasm/archive/refs/tags/spec/v3.1.0.tar.gz
-
+        run: wget https://github.com/openqasm/openqasm/archive/refs/tags/spec/$OPENQASM_VERSION.tar.gz
       - name: Unpack specification
-        run: tar -xf v3.1.0.tar.gz
+        run: tar -xf $OPENQASM_VERSION.tar.gz
 
       - name: Compile parsers
         run: |
           mkdir pages
-          cd openqasm-spec-v3.1.0/source/grammar
-          antlr4 -o openqasm-python-parser-v3.1.0 -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
-          tar -czf openqasm-python-parser-v3.1.0.tar.gz openqasm-python-parser-v3.1.0
-          antlr4 -o openqasm-javascript-parser-v3.1.0 -Dlanguage=JavaScript -visitor qasm3Lexer.g4 qasm3Parser.g4
-          tar -czf openqasm-javascript-parser-v3.1.0.tar.gz openqasm-javascript-parser-v3.1.0
-          cp openqasm-python-parser-v3.1.0.tar.gz ../../..
-          cp openqasm-javascript-parser-v3.1.0.tar.gz ../../..
-          cp -r openqasm-javascript-parser-v3.1.0 ../../../pages
+          cd openqasm-spec-$OPENQASM_VERSION/source/grammar
+          antlr4 -v $ANTLR4_VERSION -o openqasm-python-parser-$OPENQASM_VERSION -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
+          tar -czf openqasm-python-parser-$OPENQASM_VERSION.tar.gz openqasm-python-parser-$OPENQASM_VERSION
+          antlr4 -v $ANTLR4_VERSION -o openqasm-javascript-parser-$OPENQASM_VERSION -Dlanguage=JavaScript -visitor qasm3Lexer.g4 qasm3Parser.g4
+          tar -czf openqasm-javascript-parser-$OPENQASM_VERSION.tar.gz openqasm-javascript-parser-$OPENQASM_VERSION
+          cp openqasm-python-parser-$OPENQASM_VERSION.tar.gz ../../..
+          cp openqasm-javascript-parser-$OPENQASM_VERSION.tar.gz ../../..
+          cp -r openqasm-javascript-parser-$OPENQASM_VERSION ../../../pages
 
-      - name: Upload javascript parser as artifact
+      - name: Install pandoc
+        run: sudo apt-get install pandoc
+
+      - name: Create index page and copy examples
+        run: |
+          pandoc README.md --standalone --metadata title="Parsers generated from OpenQASM specification" -o pages/index.html
+          cp -r examples pages/
+
+      - name: Upload artifact for pages
         id: deployment
         uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
         with:
           path: pages/
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload artifact for release
+        uses: actions/upload-artifact@v4
         with:
-          files: |
-            openqasm-python-parser-v3.1.0.tar.gz
-            openqasm-javascript-parser-v3.1.0.tar.gz
+          name: release
+          if-no-files-found: error
+          path: |
+            openqasm-python-parser-${{env.OPENQASM_VERSION}}.tar.gz
+            openqasm-javascript-parser-${{env.OPENQASM_VERSION}}.tar.gz
 
-  # Deploy job
-  deploy:
-    # Add a dependency to the build job
+  deploy-pages:
     needs: build
+
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
@@ -66,9 +78,31 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    # Specify runner + deployment step
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
+        uses: actions/deploy-pages@v4
+
+  release:
+    needs: build
+
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+
+    permissions:
+      contents: write      # to make release
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact for release
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: $OPENQASM_VERSION
+          files: |
+            openqasm-python-parser-$OPENQASM_VERSION.tar.gz
+            openqasm-javascript-parser-$OPENQASM_VERSION.tar.gz
