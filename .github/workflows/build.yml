@@ -28,8 +28,10 @@ jobs:
           ls
           cd openqasm-spec-v3.1.0/source/grammar
           antlr4 -o openqasm-python-parser-v3.1.0 -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
+          ls
           tar -czf openqasm-python-parser-v3.1.0.tar.gz openqasm-python-parser-v3.1.0
           antlr4 -o openqasm-javascript-parser-v3.1.0 -Dlanguage=JavaScript -visitor qasm3Lexer.g4 qasm3Parser.g4
+          ls
           tar -czf openqasm-javascript-parser-v3.1.0.tar.gz openqasm-javascript-parser-v3.1.0
           mv openqasm-python-parser-v3.1.0.tar.gz ../../..
           mv openqasm-javascript-parser-v3.1.0.tar.gz ../../..
