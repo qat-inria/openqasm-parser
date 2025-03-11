@@ -1,0 +1,74 @@
+name: Build
+on: [workflow_dispatch]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: "Build parsers"
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write      # to make release
+
+    steps:
+      - name: Install antlr4
+        run: sudo apt-get install antlr4
+
+      - name: Download latest OpenQASM specification
+        run: wget https://github.com/openqasm/openqasm/archive/refs/tags/spec/v3.1.0.tar.gz
+
+      - name: Unpack specification
+        run: tar -xf v3.1.0.tar.gz
+
+      - name: Compile parsers
+        run: |
+          mkdir pages
+          cd openqasm-spec-v3.1.0/source/grammar
+          antlr4 -o openqasm-python-parser-v3.1.0 -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
+          tar -czf openqasm-python-parser-v3.1.0.tar.gz openqasm-python-parser-v3.1.0
+          antlr4 -o openqasm-javascript-parser-v3.1.0 -Dlanguage=JavaScript -visitor qasm3Lexer.g4 qasm3Parser.g4
+          tar -czf openqasm-javascript-parser-v3.1.0.tar.gz openqasm-javascript-parser-v3.1.0
+          cp openqasm-python-parser-v3.1.0.tar.gz ../../..
+          cp openqasm-javascript-parser-v3.1.0.tar.gz ../../..
+          cp -r openqasm-javascript-parser-v3.1.0 ../../../pages
+
+      - name: Upload javascript parser as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
+        with:
+          path: pages/
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            openqasm-python-parser-v3.1.0.tar.gz
+            openqasm-javascript-parser-v3.1.0.tar.gz
+
+  # Deploy job
+  deploy:
+    # Add a dependency to the build job
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
