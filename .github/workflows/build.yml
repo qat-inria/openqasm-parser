@@ -102,7 +102,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: $OPENQASM_VERSION
+          tag_name: ${{env.OPENQASM_VERSION}}
           files: |
-            openqasm-python-parser-$OPENQASM_VERSION.tar.gz
-            openqasm-javascript-parser-$OPENQASM_VERSION.tar.gz
+            openqasm-python-parser-${{env.OPENQASM_VERSION}}.tar.gz
+            openqasm-javascript-parser-${{env.OPENQASM_VERSION}}.tar.gz
