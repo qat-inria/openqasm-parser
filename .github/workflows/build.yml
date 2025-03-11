@@ -40,6 +40,9 @@ jobs:
           cp openqasm-javascript-parser-$OPENQASM_VERSION.tar.gz ../../..
           cp -r openqasm-javascript-parser-$OPENQASM_VERSION ../../../pages
 
+      - name: Install pandoc
+        run: sudo apt-get install pandoc
+
       - name: Create index page and copy examples
         run: |
           pandoc README.md --standalone --metadata title="Parsers generated from OpenQASM specification" -o pages/index.html
