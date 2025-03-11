@@ -4,10 +4,42 @@
     <title>Web QASM viewer</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <style>
+      html, body {
+          height: 100%;
+          margin: 0;
+          display: flex;
+          overflow: hidden;
+      }
+
+      #container {
+          display: flex;
+          width: 100vw;
+          height: 100vh;
+      }
+
+      textarea {
+          width: 25%;
+          height: 100%;
+          border: none;
+          padding: 10px;
+          resize: none;
+          font-size: 16px;
+          box-sizing: border-box;
+      }
+
+      #circuit {
+          width: 75%;
+          height: 100%;
+          overflow: auto;
+          padding: 10px;
+          border-left: 2px solid #ccc;
+          box-sizing: border-box;
+      }
+    </style>
   </head>
   <body>
-    <div id="inputs">
+    <div id="container">
       <textarea id="code">
 OPENQASM 2.0;
 include "qelib1.inc";
@@ -16,8 +48,8 @@ creg c0[1];
 rz(5*pi/4) q1[0];
 rx(3*pi/4) q1[0];
       </textarea>
-    </div>
-    <div id="circuit">
+      <div id="circuit">
+      </div>
     </div>
     <script src="https://unpkg.com/@microsoft/quantum-viz.js"></script>
     <script type="importmap">

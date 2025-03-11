@@ -40,9 +40,10 @@ jobs:
           cp openqasm-javascript-parser-$OPENQASM_VERSION.tar.gz ../../..
           cp -r openqasm-javascript-parser-$OPENQASM_VERSION ../../../pages
 
-      - name: Create index page
+      - name: Create index page and copy examples
         run: |
-          pandoc README.md --standalone --metadata title="Parsers generated from OpenQASM specification" -o pages/index.html 
+          pandoc README.md --standalone --metadata title="Parsers generated from OpenQASM specification" -o pages/index.html
+          cp -r examples pages/
 
       - name: Upload artifact for pages
         id: deployment
