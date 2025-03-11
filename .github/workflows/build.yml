@@ -1,5 +1,5 @@
 name: Build
-on: [workflow_dispatch]
+on: [push, workflow_dispatch]
 
 permissions:
   contents: read
@@ -28,6 +28,7 @@ jobs:
 
       - name: Compile parsers
         run: |
+          command -v antlr4
           mkdir pages
           cd openqasm-spec-v3.1.0/source/grammar
           antlr4 -v4.13.2 -o openqasm-python-parser-v3.1.0 -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
