@@ -13,9 +13,6 @@ jobs:
     name: "Build parsers"
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write      # to make release
-
     steps:
       - name: Install antlr4-tools
         run: pip install antlr4-tools
@@ -28,33 +25,32 @@ jobs:
 
       - name: Compile parsers
         run: |
-          command -v antlr4
           mkdir pages
           cd openqasm-spec-v3.1.0/source/grammar
-          antlr4 -v4.13.2 -o openqasm-python-parser-v3.1.0 -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
+          antlr4 -v 4.13.2 -o openqasm-python-parser-v3.1.0 -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
           tar -czf openqasm-python-parser-v3.1.0.tar.gz openqasm-python-parser-v3.1.0
-          antlr4 -v4.13.2 -o openqasm-javascript-parser-v3.1.0 -Dlanguage=JavaScript -visitor qasm3Lexer.g4 qasm3Parser.g4
+          antlr4 -v 4.13.2 -o openqasm-javascript-parser-v3.1.0 -Dlanguage=JavaScript -visitor qasm3Lexer.g4 qasm3Parser.g4
           tar -czf openqasm-javascript-parser-v3.1.0.tar.gz openqasm-javascript-parser-v3.1.0
           cp openqasm-python-parser-v3.1.0.tar.gz ../../..
           cp openqasm-javascript-parser-v3.1.0.tar.gz ../../..
           cp -r openqasm-javascript-parser-v3.1.0 ../../../pages
 
-      - name: Upload javascript parser as artifact
+      - name: Upload artifact for pages
         id: deployment
         uses: actions/upload-pages-artifact@v3 # or specific "vX.X.X" version tag for this action
         with:
           path: pages/
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload artifact for release
+        uses: actions/upload-artifact@v4
         with:
-          files: |
+          name: release
+          if-no-files-found: error
+          path: |
             openqasm-python-parser-v3.1.0.tar.gz
             openqasm-javascript-parser-v3.1.0.tar.gz
 
-  # Deploy job
-  deploy:
-    # Add a dependency to the build job
+  deploy-pages:
     needs: build
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
@@ -67,9 +63,28 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
-    # Specify runner + deployment step
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
+        uses: actions/deploy-pages@v4
+
+  release:
+    needs: build
+
+    permissions:
+      contents: write      # to make release
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact for release
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            openqasm-python-parser-v3.1.0.tar.gz
+            openqasm-javascript-parser-v3.1.0.tar.gz
