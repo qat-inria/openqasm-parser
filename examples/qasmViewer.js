@@ -20,6 +20,7 @@ export default function drawQASMCircuit(input, circuitDiv) {
     const symbol_QREG = parser.symbolicNames.indexOf("QREG");
     const symbol_CREG = parser.symbolicNames.indexOf("CREG");
     const symbol_DecimalIntegerLiteral = parser.symbolicNames.indexOf("DecimalIntegerLiteral");
+    const symbol_FloatLiteral = parser.symbolicNames.indexOf("FloatLiteral");
     const symbol_ASTERISK = parser.symbolicNames.indexOf("ASTERISK");
     const symbol_SLASH = parser.symbolicNames.indexOf("SLASH");
     const symbol_Identifier = parser.symbolicNames.indexOf("Identifier");
@@ -48,7 +49,7 @@ export default function drawQASMCircuit(input, circuitDiv) {
             }
         }
         else {
-            if (expr.children[0].symbol.type == symbol_DecimalIntegerLiteral) {
+            if (expr.children[0].symbol.type == symbol_DecimalIntegerLiteral || expr.children[0].symbol.type == symbol_FloatLiteral) {
                 return expr.children[0].symbol.text
             }
             else if (expr.children[0].symbol.type == symbol_Identifier) {
@@ -72,7 +73,6 @@ export default function drawQASMCircuit(input, circuitDiv) {
         const index = qubits.length;
         const qubit = { id: index };
         qubits.push(qubit);
-        console.log("here");
         return qubit;
     }
     function get_qubit(operand) {
@@ -165,15 +165,6 @@ export default function drawQASMCircuit(input, circuitDiv) {
             throw new Error(`Unexpected element: ${child}`)
         }
     }
-    qubits[0].numChildren = 1;
-    operations.push(
-        {
-            gate: "Measure",
-            isMeasurement: true,
-            controls: [{ qId: 0 }],
-            targets: [{ type: 1, qId: 0, cId: 0 }]
-        }
-    );
     const circuit = {
         qubits: qubits,
         operations: operations
