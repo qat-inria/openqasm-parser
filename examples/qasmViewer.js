@@ -25,37 +25,27 @@ export default function drawQASMCircuit(input, circuitDiv) {
     const symbol_SLASH = parser.symbolicNames.indexOf("SLASH");
     const symbol_Identifier = parser.symbolicNames.indexOf("Identifier");
     function evaluate_expression(expr) {
-        if (expr.children[0].symbol == undefined) {
-            throw new Error(`Unknown expression: ${expr}`)
+        if (expr.children.length == 3) {
+            const lhs = evaluate_expression(expr.children[0]);
+            const rhs = evaluate_expression(expr.children[2]);
+            if (expr.children[1].symbol.type == symbol_SLASH) {
+                return lhs / rhs;
+            }
+            else if (expr.children[1].symbol.type == symbol_ASTERISK) {
+                return lhs * rhs;
+            }
         }
         else {
             if (expr.children[0].symbol.type == symbol_DecimalIntegerLiteral) {
-                return parseInt(expr.children[0].symbol.text)
+                return parseInt(expr.children[0].symbol.text);
             }
-            else {
-                throw new Error(`Unknown symbol: ${expr.children[0]}`)
-            }
-        }
-    }
-    function format_expression(expr) {
-        if (expr.children.length == 3) {
-            const lhs = format_expression(expr.children[0]);
-            const rhs = format_expression(expr.children[2]);
-            if (expr.children[1].symbol.type == symbol_SLASH) {
-                return `${lhs}/${rhs}`
-            }
-            else if (expr.children[1].symbol.type == symbol_ASTERISK) {
-                return `${lhs}·${rhs}`
-            }
-        }
-        else {
-            if (expr.children[0].symbol.type == symbol_DecimalIntegerLiteral || expr.children[0].symbol.type == symbol_FloatLiteral) {
-                return expr.children[0].symbol.text
+            else if (expr.children[0].symbol.type == symbol_FloatLiteral) {
+                return parseFloat(expr.children[0].symbol.text);
             }
             else if (expr.children[0].symbol.type == symbol_Identifier) {
                 const identifier = expr.children[0].symbol.text;
                 if (identifier == "pi") {
-                    return "π"
+                    return Math.PI;
                 }
                 else {
                     throw new Error(`Unknown identifier: ${identifier}`)
@@ -65,6 +55,44 @@ export default function drawQASMCircuit(input, circuitDiv) {
                 throw new Error(`Unknown symbol: ${expr.children[0]}`)
             }
         }
+    }
+    function gcd(a, b) {
+        while (b != 0) {
+            const m = a % b;
+            a = b;
+            b = m;
+        }
+        return a;
+    }
+    function format_expression(expr) {
+        const value = evaluate_expression(expr);
+        const value_over_pi = value / Math.PI;
+        if (Math.abs((value_over_pi * 16) % 1) < 0.00001) {
+            const num = Math.round(value_over_pi * 16);
+            const denom = 16;
+            const d = gcd(num, denom);
+            const rnum = num / d;
+            const rdenom = denom / d;
+            if (rdenom == 1) {
+                if (rnum == 1) {
+                    return "π";
+                }
+                else {
+                    return `${rnum}π`;
+                }
+            }
+            else {
+                if (rnum == 1) {
+                    return "π/${rdenom}";
+                }
+                else {
+                    return `${rnum}π/${rdenom}`;
+                }
+            }
+        }
+        else {
+            return value.toFixed(2)
+        };
     }
     const qubits = [];
     const qubit_dict = {};
