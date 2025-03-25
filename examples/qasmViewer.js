@@ -68,8 +68,9 @@ export default function drawQASMCircuit(input, circuitDiv) {
     function format_expression(expr) {
         const value = evaluate_expression(expr);
         const value_over_pi = value / Math.PI;
-        if (Math.abs((value_over_pi * 16) % 1) < 0.00001) {
-            const num = Math.round(value_over_pi * 16);
+        const scaled = value_over_pi * 16;
+        const num = Math.round(scaled);
+        if (Math.abs(num - scaled) < 0.0000001) {
             const denom = 16;
             const d = gcd(num, denom);
             const rnum = num / d;
