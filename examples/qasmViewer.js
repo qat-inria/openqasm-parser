@@ -15,6 +15,7 @@ export default function drawQASMCircuit(input, circuitDiv) {
     const rule_includeStatement = parser.ruleNames.indexOf("includeStatement");
     const rule_oldStyleDeclarationStatement =  parser.ruleNames.indexOf("oldStyleDeclarationStatement");
     const rule_gateCallStatement = parser.ruleNames.indexOf("gateCallStatement");
+    const rule_assignmentStatement = parser.ruleNames.indexOf("assignmentStatement");
     const rule_designator = parser.ruleNames.indexOf("designator");
     const rule_indexedIdentifier = parser.ruleNames.indexOf("indexedIdentifier");
     const symbol_QREG = parser.symbolicNames.indexOf("QREG");
@@ -180,6 +181,19 @@ export default function drawQASMCircuit(input, circuitDiv) {
                     else {
                         throw new Error(`Unexpected gate: ${gate}`)
                     }
+                }
+                else if (statement.ruleIndex == rule_assignmentStatement) {
+                    const measured_qubit = get_qubit(statement.measureExpression().gateOperand().indexedIdentifier());
+                    const id = measured_qubit.id;
+                    qubits[id].numChildren = 1;
+                    operations.push(
+                        {
+                            gate: "Measure",
+                            isMeasurement: true,
+                            controls: [{ qId: id }],
+                            targets: [{ type: 1, qId: id, cId: 0 }]
+                        }
+                    );
                 }
                 else {
                     throw new Error(`Unexpected statement: ${child}`)
