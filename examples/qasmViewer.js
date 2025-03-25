@@ -84,7 +84,7 @@ export default function drawQASMCircuit(input, circuitDiv) {
             }
             else {
                 if (rnum == 1) {
-                    return "π/${rdenom}";
+                    return `π/${rdenom}`;
                 }
                 else {
                     return `${rnum}π/${rdenom}`;
