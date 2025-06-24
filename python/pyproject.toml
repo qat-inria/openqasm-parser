@@ -1,0 +1,9 @@
+[project]
+name = "openqasm-parser"
+authors = [
+    { name = "Thierry Martinez", email = "thierry.martinez@inria.fr" },
+]
+version = "3.1.0"
+dependencies = [
+    "antlr4-python3-runtime==4.13.2",
+]

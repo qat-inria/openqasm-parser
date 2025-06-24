@@ -21,24 +21,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install antlr4-tools
-        run: pip install antlr4-tools
+        run: pip install -r builder/requirements.txt
 
-      - name: Download latest OpenQASM specification
-        run: wget https://github.com/openqasm/openqasm/archive/refs/tags/spec/$OPENQASM_VERSION.tar.gz
-      - name: Unpack specification
-        run: tar -xf $OPENQASM_VERSION.tar.gz
-
-      - name: Compile parsers
-        run: |
-          mkdir pages
-          cd openqasm-spec-$OPENQASM_VERSION/source/grammar
-          antlr4 -v $ANTLR4_VERSION -o openqasm-python-parser-$OPENQASM_VERSION -Dlanguage=Python3 -visitor qasm3Lexer.g4 qasm3Parser.g4
-          tar -czf openqasm-python-parser-$OPENQASM_VERSION.tar.gz openqasm-python-parser-$OPENQASM_VERSION
-          antlr4 -v $ANTLR4_VERSION -o openqasm-javascript-parser-$OPENQASM_VERSION -Dlanguage=JavaScript -visitor qasm3Lexer.g4 qasm3Parser.g4
-          tar -czf openqasm-javascript-parser-$OPENQASM_VERSION.tar.gz openqasm-javascript-parser-$OPENQASM_VERSION
-          cp openqasm-python-parser-$OPENQASM_VERSION.tar.gz ../../..
-          cp openqasm-javascript-parser-$OPENQASM_VERSION.tar.gz ../../..
-          cp -r openqasm-javascript-parser-$OPENQASM_VERSION ../../../pages
+      - name: Build parsers
+        run: python builder/builder.py ${ANTLR4_VERSION} ${OPENQASM_VERSION}
 
       - name: Install pandoc
         run: sudo apt-get install pandoc
