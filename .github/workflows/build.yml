@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install antlr4-tools
+      - name: Install requirements
         run: pip install -r builder/requirements.txt
 
       - name: Build parsers
