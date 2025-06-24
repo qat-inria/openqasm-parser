@@ -27,7 +27,7 @@ def run_antlr4(antlr4_version: str, grammar_path: Path, target: Path, language: 
     subprocess.run(["antlr4", "-v", antlr4_version, "-o", relative_target, f"-Dlanguage={language}", "-visitor", "qasm3Lexer.g4", "qasm3Parser.g4"], cwd=grammar_path, check=True)
 
 def make_tarball(path: Path) -> Path:
-    tarball_path = path.with_suffix(".tar.gz")
+    tarball_path = path.with_name(path.name + ".tar.gz")
     with tarfile.open(tarball_path, "w:gz") as tar:
         tar.add(path, arcname=os.path.basename(path))
     return tarball_path
@@ -36,7 +36,7 @@ def build_python(antlr4_version: str, openqasm_version: str, grammar_path: Path)
     python_package_name = "openqasm_parser"
     python_repository_path = Path(f"openqasm-python-parser-{openqasm_version}")
     python_repository_path.mkdir(exist_ok=True)
-    run_antlr4(antlr4_version, grammar_path, python_repository_path, "Python3")
+    run_antlr4(antlr4_version, grammar_path, python_repository_path / python_package_name, "Python3")
     with (python_repository_path / "pyproject.toml").open("w") as f:
         f.write(f"""[project]
 name = "openqasm-parser"
