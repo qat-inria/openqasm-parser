@@ -33,7 +33,9 @@ jobs:
 
       - name: Create index page and copy examples
         run: |
+          mkdir pages
           pandoc README.md --standalone --metadata title="Parsers generated from OpenQASM specification" -o pages/index.html
+          cp -r openqasm-javascript-parser-${OPENQASM_VERSION} pages/
           cp -r examples pages/
 
       - name: Upload artifact for pages
