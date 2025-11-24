@@ -32,9 +32,14 @@ def make_tarball(path: Path) -> Path:
         tar.add(path, arcname=os.path.basename(path))
     return tarball_path
 
-def build_python(antlr4_version: str, openqasm_version: str, grammar_path: Path) -> Path:
+def copy_documents(target_path: Path) -> None:
+    shutil.copy("LICENSE", target_path)
+    shutil.copy("CHANGELOG.md", target_path)
+    shutil.copy("CONTRIBUTING.md", target_path)
+
+def build_python(package_version: str, antlr4_version: str, openqasm_version: str, grammar_path: Path) -> Path:
     python_package_name = "openqasm_parser"
-    python_repository_path = Path(f"openqasm-python-parser-{openqasm_version}")
+    python_repository_path = Path(f"openqasm-python-parser-{package_version}")
     python_repository_path.mkdir(exist_ok=True)
     run_antlr4(antlr4_version, grammar_path, python_repository_path / python_package_name, "Python3")
     with (python_repository_path / "pyproject.toml").open("w") as f:
@@ -43,7 +48,7 @@ name = "openqasm-parser"
 authors = [
     {{ name = "Thierry Martinez", email = "thierry.martinez@inria.fr" }},
 ]
-version = "{openqasm_version}"
+version = "{package_version}"
 dependencies = [
     "antlr4-python3-runtime=={antlr4_version}",
 ]
@@ -58,24 +63,28 @@ from openqasm_parser.qasm3ParserVisitor import qasm3ParserVisitor
 __all__ = ["qasm3Lexer", "qasm3Parser", "qasm3ParserVisitor"]
 """)
     shutil.copytree("python/tests", python_repository_path / "tests", dirs_exist_ok=True)
+    shutil.copy("python/README.md", python_repository_path)
+    copy_documents(python_repository_path)
     subprocess.run(["pytest"], cwd=python_repository_path, check=True)
     tarball_path = make_tarball(python_repository_path)
     return tarball_path
 
-def build_javascript(antlr4_version: str, openqasm_version: str, grammar_path: Path) -> Path:
-    javascript_repository_path = Path(f"openqasm-javascript-parser-{openqasm_version}")
+def build_javascript(package_version: str, antlr4_version: str, openqasm_version: str, grammar_path: Path) -> Path:
+    javascript_repository_path = Path(f"openqasm-javascript-parser-{package_version}")
     run_antlr4(antlr4_version, grammar_path, javascript_repository_path, "JavaScript")
+    shutil.copy("javascript/README.md", javascript_repository_path)
+    copy_documents(javascript_repository_path)
     tarball_path = make_tarball(javascript_repository_path)
     return tarball_path
 
-def main(antlr4_version: str, openqasm_version: str) -> None:
+def main(package_version: str, antlr4_version: str, openqasm_version: str) -> None:
     spec_url = f"https://github.com/openqasm/openqasm/archive/refs/tags/spec/{openqasm_version}.tar.gz"
     tarfile_name, _headers = urllib.request.urlretrieve(spec_url)
     with tarfile.open(tarfile_name) as tar:
         tar.extractall(filter="data")
     grammar_path = f"openqasm-spec-{openqasm_version}/source/grammar"
-    build_python(antlr4_version, openqasm_version, grammar_path)
-    build_javascript(antlr4_version, openqasm_version, grammar_path)
+    build_python(package_version, antlr4_version, openqasm_version, grammar_path)
+    build_javascript(package_version, antlr4_version, openqasm_version, grammar_path)
 
 if __name__ == "__main__":
     typer.run(main)

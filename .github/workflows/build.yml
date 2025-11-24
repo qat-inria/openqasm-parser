@@ -9,6 +9,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  PACKAGE_VERSION: v3.1.0.0
   OPENQASM_VERSION: v3.1.0
   ANTLR4_VERSION: 4.13.2
 
@@ -26,7 +27,7 @@ jobs:
           pip install antlr4-python3-runtime==${ANTLR4_VERSION}
 
       - name: Build parsers
-        run: python builder/builder.py ${ANTLR4_VERSION} ${OPENQASM_VERSION}
+        run: python builder/builder.py ${PACKAGE_VERSION} ${ANTLR4_VERSION} ${OPENQASM_VERSION}
 
       - name: Install pandoc
         run: sudo apt-get install pandoc
@@ -35,7 +36,7 @@ jobs:
         run: |
           mkdir pages
           pandoc README.md --standalone --metadata title="Parsers generated from OpenQASM specification" -o pages/index.html
-          cp -r openqasm-javascript-parser-${OPENQASM_VERSION} pages/
+          cp -r openqasm-javascript-parser-${PACKAGE_VERSION} pages/
           cp -r examples pages/
 
       - name: Upload artifact for pages
@@ -50,8 +51,8 @@ jobs:
           name: release
           if-no-files-found: error
           path: |
-            openqasm-python-parser-${{env.OPENQASM_VERSION}}.tar.gz
-            openqasm-javascript-parser-${{env.OPENQASM_VERSION}}.tar.gz
+            openqasm-python-parser-${{env.PACKAGE_VERSION}}.tar.gz
+            openqasm-javascript-parser-${{env.PACKAGE_VERSION}}.tar.gz
 
   deploy-pages:
     needs: build
@@ -92,7 +93,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{env.OPENQASM_VERSION}}
+          tag_name: ${{env.PACKAGE_VERSION}}
           files: |
-            openqasm-python-parser-${{env.OPENQASM_VERSION}}.tar.gz
-            openqasm-javascript-parser-${{env.OPENQASM_VERSION}}.tar.gz
+            openqasm-python-parser-${{env.PACKAGE_VERSION}}.tar.gz
+            openqasm-javascript-parser-${{env.PACKAGE_VERSION}}.tar.gz
