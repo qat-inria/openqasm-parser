@@ -108,7 +108,13 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Download artifact for release
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+      - name: Extract package
+        run: |
+          tar -xf openqasm-python-parser-${PACKAGE_VERSION}.tar.gz
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.python-version }}
@@ -117,6 +123,6 @@ jobs:
           python -m pip install -U pip
           pip install build
       - name: Build a binary wheel and a source tarball
-        run: python -m build --sdist --wheel --outdir dist/ .
+        run: python -m build --sdist --wheel --outdir dist/ openqasm-python-parser-${PACKAGE_VERSION}
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
